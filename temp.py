@@ -1,1 +1,0 @@
-import temp2 #noqa (사용하지 않을 떄)
