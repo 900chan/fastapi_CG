@@ -25,6 +25,7 @@ jobs:
           path: ~/.local
 
       - name: Install Poetry
+        if: steps.cache-poetry.outputs.cache-hit != 'true'
         run: | # 여러줄을 쓰고 싶을 때
           curl -sSL https://install.python-poetry.org | python3 - --version 1.8.5
 
@@ -41,6 +42,7 @@ jobs:
           path: /home/runner/.cache/pypoetry/virtualenvs/
 
       - name: Install dependencies
+        if: steps.cache-venv.outputs.cache-hit != 'true'
         run: poetry install --no-root
 
       - name: Run Black
@@ -66,6 +68,13 @@ jobs:
         with:
           python-version: "3.13"
 
+      - name: Cache Poetry
+        id: cache-poetry
+        uses: actions/cache@v3
+        with:
+            key: poetry-1.8.5
+            path: ~/.local/
+
       - name: Install Poetry
         if: steps.cache-poetry.outputs.cache-hit != 'true'
         run: |
@@ -74,7 +83,15 @@ jobs:
       - name: Register Poetry bin
         run: echo "${HOME}/.poetry/bin" >> $GITHUB_PATH
 
+      - name: Cache dependencies
+        id: cache-venv
+        uses: actions/cache@v3
+        with:
+            key: python-${{ steps.setup-python.outputs.python-version }}-poetry-lock-${{ hashFiles('poetry.lock') }}-toml-${{ hashFiles('pyproject.toml') }}-poetry-1.8.5
+            path: /home/runner/.cache/pypoetry/virtualenvs/
+
       - name: Install dependencies
+        if: steps.cache-venv.outputs.cache-hit != 'true'
         run: poetry install --no-root
 
       - name: Run tests
